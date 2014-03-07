@@ -519,5 +519,3 @@ stock sscanf_(string[], format[], {Float,_}:...) // by Y_Less
 	while (delim > ' ');
 	return 0;
 }
-
-forward OnProxyResponse(playerid, bool:proxy);
