@@ -32,8 +32,10 @@ Speed Test
 Accuracy
 ----------
 
+```C
 http://www.maxmind.com/en/city_accuracy - City accuracy
 Country accuracy - 99.5%
+```
 
 Credits
 ----------
