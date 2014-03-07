@@ -3,7 +3,7 @@ SAMP-geoip
 
 Geographical IP based on MaxMind databases for SA-MP
 
-The INC uses SQLite this product includes GeoLite2 data created by MaxMind, available from
+this product includes GeoLite2 data created by MaxMind, available from
 http://maxmind.com/
 
 Functions
