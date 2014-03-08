@@ -96,7 +96,7 @@ stock GetPlayerProxy(playerid) {
 	new ip[24];
 	GetPlayerIp(playerid, ip, sizeof(ip));
 	
-	return GetIPProxy(ip, playerid);
+	return GetIPProxy(ip);
 }
 
 /*
@@ -201,20 +201,25 @@ stock GetIPGMT(ip[]) {
 	return floatround( strval( dest ) / 15 );
 }
 
-stock GetIPProxy(ip[], playerid) {
+stock GetIPProxy(ip[]) {
 
-	if(IsPlayerConnected(playerid) && strlen(ip) > 0) {
+	if(strlen(ip) > 0) {
 	
-	    new string[500];
+		new tmp[90];
+		tmp = ip2long(ip);
+
+		new dest[50];
+
+		new string[500];
 		format(string, sizeof(string), "SELECT blk.*\n FROM geolocation loc,\n geoblocks blk\n WHERE blk.idx = (%s-(%s %% 65536))\n AND blk.startIpNum < %s\n AND blk.endIpNum > %s\n AND loc.locId = blk.locId LIMIT 1;", tmp, tmp, tmp, tmp);
 
 		geoip_city = db_open(GeoIP_CityFile);
-	    _result = db_query(geoip_city, string);
-	    if(db_num_rows(_result) >= 1)
-	    {
-	        db_get_field_assoc(_result, "is_anonymous_proxy", dest, sizeof(dest));
-	    }
-	    db_free_result(_result);
+		_result = db_query(geoip_city, string);
+		if(db_num_rows(_result) >= 1)
+		{
+			db_get_field_assoc(_result, "is_anonymous_proxy", dest, sizeof(dest));
+		}
+		db_free_result(_result);
 		db_close(geoip_city);
 		
 		return strval(dest);
