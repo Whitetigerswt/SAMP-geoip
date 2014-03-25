@@ -23,20 +23,6 @@
 
 /*
 	---------------------------------------------------------------------------------------
-	NATIVES
-	---------------------------------------------------------------------------------------
-*/
-
-/*
-	native GetPlayerCountry(playerid, string[], const len = sizeof(string));
-	native GetPlayerISP(playerid, string[], const len = sizeof(string));
-	native GetPlayerCity(playerid, string[], const len = sizeof(string));
-	native GetPlayerGMT(playerid);
-	native GetPlayerProxy(playerid);
-*/
-
-/*
-	---------------------------------------------------------------------------------------
 	Variables
 	---------------------------------------------------------------------------------------
 */
@@ -53,8 +39,24 @@
 new DB:geoip_db;
 new DB:geoip_city;
 
+new stock g_iBackwardsCompat = -1;
+
 
 new DBResult:_result;
+
+/*
+	---------------------------------------------------------------------------------------
+	NATIVES
+	---------------------------------------------------------------------------------------
+*/
+
+/*
+	native GetPlayerCountry(playerid, string[], const len = sizeof(string));
+	native GetPlayerISP(playerid, string[], const len = sizeof(string));
+	native GetPlayerCity(playerid, string[], const len = sizeof(string));
+	native GetPlayerGMT(playerid);
+	native GetPlayerProxy(playerid);
+*/
 
 stock GetPlayerCountry(playerid, string[], const len = sizeof(string)) {
 	new ip[24];
@@ -119,7 +121,27 @@ stock GetIPCountry(ip[], dest[], const len = sizeof(dest)) {
 	tmp = ip2long(ip);
 	
 	new string[500];
-	format(string, sizeof(string), "SELECT loc.*\n FROM loc_country loc,\n blocks_country blk\n WHERE blk.idx = (%s-(%s %% 65536))\n AND blk.startIpNum < %s\n AND blk.endIpNum > %s\n AND loc.locId = blk.locId LIMIT 1;", tmp, tmp, tmp, tmp);
+	
+	
+	geoip_db = db_open(GeoIP_MainFile);
+	
+	if(g_iBackwardsCompat == -1) {
+	    _result = db_query(geoip_db, "SELECT name FROM sqlite_master WHERE type='table' AND name='ip_country'");
+	    if(db_num_rows(_result) >= 1)
+        {
+            g_iBackwardsCompat = 1;
+        }
+        else
+        {
+            g_iBackwardsCompat = 0;
+		}
+	}
+
+	if(g_iBackwardsCompat == 1) {
+	    format(string, sizeof(string), "SELECT cn FROM ip_country WHERE idx >= (%s-(%s %% 65536)) AND ip_to >= %s AND  ip_from < %s LIMIT 1", tmp, tmp, tmp, tmp);
+	} else {
+		format(string, sizeof(string), "SELECT loc.*\n FROM loc_country loc,\n blocks_country blk\n WHERE blk.idx >= (%s-(%s %% 65536))\n AND blk.startIpNum < %s\n AND blk.endIpNum > %s\n AND loc.locId = blk.locId LIMIT 1;", tmp, tmp, tmp, tmp);
+	}
 	
 	geoip_db = db_open(GeoIP_MainFile);
     _result = db_query(geoip_db, string);
@@ -185,7 +207,7 @@ stock GetIPGMT(ip[]) {
 	new dest[50];
 	
 	new string[500];
-	format(string, sizeof(string), "SELECT loc.*\n FROM geolocation loc,\n geoblocks blk\n WHERE blk.idx = (%s-(%s %% 65536))\n AND blk.startIpNum < %s\n AND blk.endIpNum > %s\n AND loc.locId = blk.locId LIMIT 1;", tmp, tmp, tmp, tmp);
+	format(string, sizeof(string), "SELECT blk.*\n FROM geolocation loc,\n geoblocks blk\n WHERE blk.idx >= (%s-(%s %% 65536))\n AND blk.startIpNum < %s\n AND blk.endIpNum > %s\n AND loc.locId = blk.locId LIMIT 1;", tmp, tmp, tmp, tmp);
 
 	geoip_city = db_open(GeoIP_CityFile);
     _result = db_query(geoip_city, string);
@@ -203,6 +225,23 @@ stock GetIPGMT(ip[]) {
 
 stock GetIPProxy(ip[]) {
 
+    if(g_iBackwardsCompat == -1) {
+	    _result = db_query(geoip_db, "SELECT name FROM sqlite_master WHERE type='table' AND name='ip_country'");
+	    if(db_num_rows(_result) >= 1)
+        {
+            g_iBackwardsCompat = 1;
+        }
+        else
+        {
+            g_iBackwardsCompat = 0;
+		}
+	}
+	
+	if(g_iBackwardsCompat == 1) {
+	    printf("Error: GetIPProxy cannot work on old GeoIP Database files, please update your database files!");
+	    printf("http://forum.sa-mp.com/showthread.php?t=296171");
+	    return false;
+	}
 	if(strlen(ip) > 0) {
 	
 		new tmp[90];
