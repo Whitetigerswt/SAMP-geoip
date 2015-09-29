@@ -122,7 +122,6 @@ stock GetIPCountry(ip[], dest[], const len = sizeof(dest)) {
 	
 	new string[500];
 	
-	
 	geoip_db = db_open(GeoIP_MainFile);
 	
 	if(g_iBackwardsCompat == -1) {
@@ -135,15 +134,15 @@ stock GetIPCountry(ip[], dest[], const len = sizeof(dest)) {
         {
             g_iBackwardsCompat = 0;
 		}
+		db_free_result(_result);
 	}
-
+	
 	if(g_iBackwardsCompat == 1) {
 	    format(string, sizeof(string), "SELECT cn FROM ip_country WHERE idx >= (%s-(%s %% 65536)) AND ip_to >= %s AND  ip_from < %s LIMIT 1", tmp, tmp, tmp, tmp);
 	} else {
 		format(string, sizeof(string), "SELECT loc.*\n FROM loc_country loc,\n blocks_country blk\n WHERE blk.idx >= (%s-(%s %% 65536))\n AND blk.startIpNum < %s\n AND blk.endIpNum > %s\n AND loc.locId = blk.locId LIMIT 1;", tmp, tmp, tmp, tmp);
 	}
-	
-	geoip_db = db_open(GeoIP_MainFile);
+
     _result = db_query(geoip_db, string);
     if(db_num_rows(_result) >= 1)
     {
