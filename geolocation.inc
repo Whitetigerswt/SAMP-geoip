@@ -471,7 +471,7 @@ stock sscanf_(string[], format[], {Float,_}:...) // by Y_Less
 					new
 						name[MAX_PLAYER_NAME];
 					id = end - stringPos;
-					foreach (Player, playerid)
+					foreach (new playerid : Player)
 					{
 						GetPlayerName(playerid, name, sizeof (name));
 						if (!strcmp(name, string[stringPos], true, id))
